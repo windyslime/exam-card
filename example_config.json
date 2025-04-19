@@ -1,0 +1,60 @@
+{
+    "exams": [
+        {
+            "date": "2023-06-10",
+            "period": "上午",
+            "subject": "语文",
+            "start_time": "07:20",
+            "end_time": "09:50"
+        },
+        {
+            "date": "2023-06-10",
+            "period": "上午",
+            "subject": "物理",
+            "start_time": "10:20",
+            "end_time": "11:50"
+        },
+        {
+            "date": "2023-06-10",
+            "period": "下午",
+            "subject": "英语",
+            "start_time": "14:10",
+            "end_time": "16:10"
+        },
+        {
+            "date": "2023-06-10",
+            "period": "晚上",
+            "subject": "历史",
+            "start_time": "19:00",
+            "end_time": "20:30"
+        },
+        {
+            "date": "2023-06-11",
+            "period": "上午",
+            "subject": "数学",
+            "start_time": "07:50",
+            "end_time": "09:50"
+        },
+        {
+            "date": "2023-06-11",
+            "period": "上午",
+            "subject": "化学",
+            "start_time": "10:20",
+            "end_time": "11:50"
+        },
+        {
+            "date": "2023-06-11",
+            "period": "下午",
+            "subject": "生物",
+            "start_time": "14:10",
+            "end_time": "15:40"
+        },
+        {
+            "date": "2023-06-11",
+            "period": "下午",
+            "subject": "地理",
+            "start_time": "16:10",
+            "end_time": "17:40"
+        }
+    ]
+}
