@@ -464,13 +464,15 @@ class ExamCard(QWidget):
         self.flow_layout.addWidget(self.message_widget)
     
     def edit_message(self, event):
+        # Initialize like in open_settings
         dialog = Dialog("编辑消息", self)
+        # Use contentWidget like in open_settings
         layout = QVBoxLayout(dialog.contentWidget)
-        message_edit = LineEdit(dialog)
+        message_edit = LineEdit(dialog.contentWidget) # Set parent to contentWidget
         message_edit.setText(self.custom_message)
         message_edit.setPlaceholderText("输入要显示的消息")
         layout.addWidget(message_edit)
-        save_btn = PushButton("保存消息")
+        save_btn = PushButton("保存消息", dialog.contentWidget) # Set parent to contentWidget
         save_btn.clicked.connect(lambda: self.save_message(message_edit.text(), dialog))
         layout.addWidget(save_btn)
         dialog.show()
