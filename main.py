@@ -2,9 +2,9 @@ import sys
 import json
 import datetime
 from PyQt6.QtCore import Qt, QTimer, QDateTime, QEasingCurve
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout
-from PyQt6.QtGui import QFont, QIcon
-from qfluentwidgets import FlowLayout, SwitchButton, PushButton, ComboBox, LineEdit, SpinBox, MessageBox
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QGridLayout
+from PyQt6.QtGui import QFont, QIcon, QPixmap
+from qfluentwidgets import SwitchButton, PushButton, ComboBox, LineEdit, SpinBox, MessageBox
 from qfluentwidgets import FluentIcon, InfoBar, Dialog, setTheme, Theme, ToolTipFilter
 
 class ExamCard(QWidget):
@@ -33,8 +33,14 @@ class ExamCard(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
         
-        # 顶部布局 - 标题和按钮
+        # 顶部布局 - 校徽、标题和按钮
         top_layout = QHBoxLayout()
+        
+        # 校徽
+        self.logo_label = QLabel()
+        logo_pixmap = QPixmap("school_logo.svg")
+        self.logo_label.setPixmap(logo_pixmap.scaled(60, 60, Qt.AspectRatioMode.KeepAspectRatio))
+        top_layout.addWidget(self.logo_label)
         
         # 标题
         self.title_label = QLabel("考试看板")
@@ -54,47 +60,38 @@ class ExamCard(QWidget):
         top_layout.addWidget(self.fullscreen_btn)
         
         main_layout.addLayout(top_layout)
-        
-        # 中间部分 - 使用FlowLayout
-        self.flow_layout = FlowLayout()
-        self.flow_layout.setAnimation(250, QEasingCurve.Type.OutQuad)
-        self.flow_layout.setContentsMargins(10, 10, 10, 10)
-        self.flow_layout.setVerticalSpacing(20)
-        self.flow_layout.setHorizontalSpacing(20)
-        
+
+        # 中间部分 - 使用QGridLayout
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setSpacing(20)
+
         # 时间显示
         self.time_widget = QWidget()
         self.time_widget.setObjectName("timeWidget")
         time_layout = QVBoxLayout(self.time_widget)
-        
         self.time_label = QLabel("00:00:00")
         self.time_label.setFont(QFont("Arial", 48, QFont.Weight.Bold))
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         time_layout.addWidget(self.time_label)
-        
-        self.flow_layout.addWidget(self.time_widget)
-        
+        self.grid_layout.addWidget(self.time_widget, 0, 0) # Row 0, Col 0
+
         # 考试状态显示
         self.status_widget = QWidget()
         self.status_widget.setObjectName("statusWidget")
         status_layout = QVBoxLayout(self.status_widget)
-        
         self.exam_status_label = QLabel("考试状态")
         self.exam_status_label.setFont(QFont("Microsoft YaHei", 20, QFont.Weight.Bold))
         status_layout.addWidget(self.exam_status_label)
-        
         self.status_label = QLabel("未开始")
         self.status_label.setFont(QFont("Microsoft YaHei", 24, QFont.Weight.Bold))
         self.status_label.setStyleSheet("color: blue;")
         status_layout.addWidget(self.status_label)
-        
-        self.flow_layout.addWidget(self.status_widget)
-        
+        self.grid_layout.addWidget(self.status_widget, 0, 1) # Row 0, Col 1
+
         # 考试信息表格
         self.exam_table_widget = QWidget()
         self.exam_table_widget.setObjectName("examTableWidget")
         self.exam_table_layout = QVBoxLayout(self.exam_table_widget)
-        
         # 表头
         header_layout = QHBoxLayout()
         headers = ["时间", "科目", "开始", "结束", "状态"]
@@ -103,24 +100,28 @@ class ExamCard(QWidget):
             label.setFont(QFont("Microsoft YaHei", 14, QFont.Weight.Bold))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             header_layout.addWidget(label)
-        
         self.exam_table_layout.addLayout(header_layout)
-        self.flow_layout.addWidget(self.exam_table_widget)
-        
+        # 考试行将在 update_exam_status 中添加
+        self.grid_layout.addWidget(self.exam_table_widget, 1, 0) # Row 1, Col 0
+
         # 自定义消息区域
         self.message_widget = QWidget()
         self.message_widget.setObjectName("messageWidget")
         message_layout = QVBoxLayout(self.message_widget)
-        
-        self.message_label = QLabel("点击编辑消息")
+        self.message_label = QLabel("消息栏")
         self.message_label.setFont(QFont("Microsoft YaHei", 16))
         self.message_label.setWordWrap(True)
-        self.message_label.mousePressEvent = self.edit_message
         message_layout.addWidget(self.message_label)
-        
-        self.flow_layout.addWidget(self.message_widget)
-        
-        main_layout.addLayout(self.flow_layout)
+        self.grid_layout.addWidget(self.message_widget, 1, 1) # Row 1, Col 1
+
+        # 设置列伸展因子，使两列平均分配宽度
+        self.grid_layout.setColumnStretch(0, 1)
+        self.grid_layout.setColumnStretch(1, 1)
+        # 可选：设置行伸展因子，如果需要垂直方向也填充
+        # self.grid_layout.setRowStretch(0, 1)
+        # self.grid_layout.setRowStretch(1, 1)
+
+        main_layout.addLayout(self.grid_layout, 1)
         
         # 底部状态栏
         bottom_layout = QHBoxLayout()
@@ -355,6 +356,11 @@ class ExamCard(QWidget):
         
         layout.addLayout(theme_layout)
         
+        # 编辑消息按钮
+        message_btn = PushButton("编辑消息")
+        message_btn.clicked.connect(lambda: self.edit_message())
+        layout.addWidget(message_btn)
+        
         # 保存按钮
         save_btn = PushButton("保存设置")
         save_btn.clicked.connect(lambda: self.save_settings(dialog))
@@ -454,17 +460,19 @@ class ExamCard(QWidget):
         if self.custom_message:
             self.message_label.setText(self.custom_message)
         else:
-            self.message_label.setText("点击编辑消息")
+            self.message_label.setText("消息栏")
         
-        # 刷新布局
-        self.flow_layout.removeAllWidgets()
-        self.flow_layout.addWidget(self.time_widget)
-        self.flow_layout.addWidget(self.status_widget)
-        self.flow_layout.addWidget(self.exam_table_widget)
-        self.flow_layout.addWidget(self.message_widget)
+        # 刷新布局 (QGridLayout 不需要像 FlowLayout 那样频繁地移除和添加)
+        # 确保控件在正确的位置，如果需要的话
+        # self.grid_layout.addWidget(self.time_widget, 0, 0)
+        # self.grid_layout.addWidget(self.status_widget, 0, 1)
+        # self.grid_layout.addWidget(self.exam_table_widget, 1, 0)
+        # self.grid_layout.addWidget(self.message_widget, 1, 1)
+        # 通常，应用样式和字体后，布局会自动调整
+        self.update()
     
-    def edit_message(self, event):
-        # Initialize like in open_settings
+    def edit_message(self):
+        # 通过设置菜单编辑消息
         dialog = Dialog("编辑消息", self)
         # Use contentWidget like in open_settings
         layout = QVBoxLayout(dialog.contentWidget)
